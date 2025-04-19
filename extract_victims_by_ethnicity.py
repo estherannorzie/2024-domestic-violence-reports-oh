@@ -8,7 +8,7 @@ monthly_totals = defaultdict(lambda: defaultdict(int))
 months_pattern = r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\b'
 
 # Open and read the PDF with pdfplumber
-with pdfplumber.open("2024-Ethnicity-of-Offenders.pdf") as pdf:
+with pdfplumber.open("2024-Ethnicity-of-Victims.pdf") as pdf:
     for page in pdf.pages:
         text = page.extract_text()
 
@@ -65,7 +65,7 @@ for month in month_order:
     row.append(total)
     data.append(row)
 
-print(data)
+# print(data)
 df_final = pd.DataFrame(data, columns=['Month', 'A', 'CC', 'AA', 'NA', 'H', 'O', 'Totals'])
 
-# print(df_final)
+print(df_final)
