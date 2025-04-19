@@ -1,218 +1,70 @@
-from PyPDF2 import PdfReader
+# Install and use pdfplumber for more accurate PDF text extraction
+import pdfplumber, re, pandas as pd
 from collections import defaultdict
-import matplotlib.pyplot as plt
 
+# Redefine monthly totals using pdfplumber
+monthly_totals = defaultdict(lambda: defaultdict(int))
 
-# I want to gather the number of offenders by race each month of 2024
-# The output should look like this
-Example_list = [
-    {"Asian": 
-     {
-        "January": 18, 
-        "February": 16, 
-        "March": 16, 
-        "April": 16, 
-        "May": 16, 
-        "June": 16, 
-        "July": 16, 
-        "August": 16, 
-        "September": 16, 
-        "October": 16, 
-        "November": 16, 
-        "December": 16
-    }},
-        {"Caucasian": 
-     {
-        "January": 18, 
-        "February": 16, 
-        "March": 16, 
-        "April": 16, 
-        "May": 16, 
-        "June": 16, 
-        "July": 16, 
-        "August": 16, 
-        "September": 16, 
-        "October": 16, 
-        "November": 16, 
-        "December": 16
-    }},
-    {"African American": 
-     {
-        "January": 18, 
-        "February": 16, 
-        "March": 16, 
-        "April": 16, 
-        "May": 16, 
-        "June": 16, 
-        "July": 16, 
-        "August": 16, 
-        "September": 16, 
-        "October": 16, 
-        "November": 16, 
-        "December": 16
-    }},
-    {"Native American": 
-     {
-        "January": 18, 
-        "February": 16, 
-        "March": 16, 
-        "April": 16, 
-        "May": 16, 
-        "June": 16, 
-        "July": 16, 
-        "August": 16, 
-        "September": 16, 
-        "October": 16, 
-        "November": 16, 
-        "December": 16
-    }},
-    {"Hispanic": 
-     {
-        "January": 18, 
-        "February": 16, 
-        "March": 16, 
-        "April": 16, 
-        "May": 16, 
-        "June": 16, 
-        "July": 16, 
-        "August": 16, 
-        "September": 16, 
-        "October": 16, 
-        "November": 16, 
-        "December": 16
-    }},
-    {"Other": 
-     {
-        "January": 18, 
-        "February": 16, 
-        "March": 16, 
-        "April": 16, 
-        "May": 16, 
-        "June": 16, 
-        "July": 16, 
-        "August": 16, 
-        "September": 16, 
-        "October": 16, 
-        "November": 16, 
-        "December": 16
-    }}
-]
+months_pattern = r'\b(January|February|March|April|May|June|July|August|September|October|November|December)\b'
 
-# Load the PDF
-reader = PdfReader("2024-Ethnicity-of-Offenders.pdf")
+# Open and read the PDF with pdfplumber
+with pdfplumber.open("2024-Ethnicity-of-Offenders.pdf") as pdf:
+    for page in pdf.pages:
+        text = page.extract_text()
 
-# Initialize a dictionary to store ethnicity offender counts by month
-Example_list = [
-    {"Asian": 
-     {
-        "January": 18, 
-        "February": 16, 
-        "March": 16, 
-        "April": 16, 
-        "May": 16, 
-        "June": 16, 
-        "July": 16, 
-        "August": 16, 
-        "September": 16, 
-        "October": 16, 
-        "November": 16, 
-        "December": 16
-    }},
-        {"Caucasian": 
-     {
-        "January": 18, 
-        "February": 16, 
-        "March": 16, 
-        "April": 16, 
-        "May": 16, 
-        "June": 16, 
-        "July": 16, 
-        "August": 16, 
-        "September": 16, 
-        "October": 16, 
-        "November": 16, 
-        "December": 16
-    }},
-    {"African American": 
-     {
-        "January": 18, 
-        "February": 16, 
-        "March": 16, 
-        "April": 16, 
-        "May": 16, 
-        "June": 16, 
-        "July": 16, 
-        "August": 16, 
-        "September": 16, 
-        "October": 16, 
-        "November": 16, 
-        "December": 16
-    }},
-    {"Native American": 
-     {
-        "January": 18, 
-        "February": 16, 
-        "March": 16, 
-        "April": 16, 
-        "May": 16, 
-        "June": 16, 
-        "July": 16, 
-        "August": 16, 
-        "September": 16, 
-        "October": 16, 
-        "November": 16, 
-        "December": 16
-    }},
-    {"Hispanic": 
-     {
-        "January": 18, 
-        "February": 16, 
-        "March": 16, 
-        "April": 16, 
-        "May": 16, 
-        "June": 16, 
-        "July": 16, 
-        "August": 16, 
-        "September": 16, 
-        "October": 16, 
-        "November": 16, 
-        "December": 16
-    }},
-    {"Other": 
-     {
-        "January": 0, 
-        "February": 0, 
-        "March": 0, 
-        "April": 0, 
-        "May": 0, 
-        "June": 0, 
-        "July": 0, 
-        "August": 0, 
-        "September": 0, 
-        "October": 0, 
-        "November": 0, 
-        "December": 0
-    }}
-]
+        # Extract month lines
+        for line in text.splitlines():
+            if re.match(months_pattern, line):
+                parts = line.split()
+                month = parts[0]
+                if len(parts) >= 7:
+                    try:
+                        monthly_totals[month]["Asian"] += int(parts[1])
+                        monthly_totals[month]["Caucasian"] += int(parts[2])
+                        monthly_totals[month]["African American"] += int(parts[3])
+                        monthly_totals[month]["Native American"] += int(parts[4])
+                        monthly_totals[month]["Hispanic"] += int(parts[5])
+                        monthly_totals[month]["Other"] += int(parts[6])
+                    except ValueError:
+                        continue
 
-# monthly_asian_counts = defaultdict(int)
-
-months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-]
-
-ethnicities = [
-    "Asian", 
-    "Caucasian", 
-    "African American", 
-    "Hispanic", 
+# Build final DataFrame
+ethnicity_categories = [
+    "Asian",
+    "Caucasian",
+    "African American",
+    "Native American",
+    "Hispanic",
     "Other"
 ]
 
-# Go through each page and extract each Race / Ethnicity offender data
-pages = reader.pages
+month_order = [
+    "January", 
+    "February", 
+    "March", 
+    "April", 
+    "May", 
+    "June", 
+    "July", 
+    "August", 
+    "September", 
+    "October", 
+    "November", 
+    "December"
+]
 
-for page in pages: # go through each page
-    # print(page)
-    text = page.extract_text() # extract the text
+data = []
+for month in month_order:
+    row = [month]
+    total = 0
+    for category in ethnicity_categories:
+        count = monthly_totals[month][category]
+        row.append(count)
+        total += count
+    row.append(total)
+    data.append(row)
+
+print(data)
+# df_final = pd.DataFrame(data, columns=['Month', 'A', 'CC', 'AA', 'NA', 'H', 'O', 'Totals'])
+
+# print(df_final)
